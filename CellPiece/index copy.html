@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <style>
+    body {
+      background-color: #f3cd7f;
+    }
+
+    .winner {
+      font-size: 30px;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <canvas id="tutorial" width="700" height="700"></canvas>
+  <div class="box">
+    <div class="winner"></div>
+  </div>
+
+  <script>
+    // 棋子位置
+    let piecePosition = {
+      white: [{ x: 100, y: 100 }, { x: 100, y: 500 }],
+      black: [{ x: 500, y: 100 }, { x: 500, y: 500 }]
+    }
+
+
+    // 棋子类
+    class CellPiece {
+
+      constructor(canvasID) {
+        this.canvas = document.getElementById(canvasID);
+        this.ctx = this.canvas.getContext('2d');
+
+        // 初始化棋盘
+        this.initial()
+
+        // 初始化数据
+        this.initData()
+      }
+
+      // 初始化棋盘
+      initial() {
+        // 上
+        this.ctx.beginPath();
+        this.ctx.moveTo(100, 100);
+        this.ctx.lineTo(500, 100);
+        this.ctx.stroke();
+
+        // 右
+        this.ctx.beginPath();
+        this.ctx.moveTo(500, 100);
+        this.ctx.lineTo(500, 500);
+        this.ctx.stroke();
+
+        // 左
+        this.ctx.beginPath();
+        this.ctx.moveTo(100, 100);
+        this.ctx.lineTo(100, 500);
+        this.ctx.stroke();
+
+        // 左对角
+        this.ctx.beginPath();
+        this.ctx.moveTo(100, 100);
+        this.ctx.lineTo(500, 500);
+        this.ctx.stroke();
+
+        // 右对角
+        this.ctx.beginPath();
+        this.ctx.moveTo(500, 100);
+        this.ctx.lineTo(100, 500);
+        this.ctx.stroke();
+
+        // 圆牢房
+        this.ctx.beginPath();
+        this.ctx.arc(300, 500, 70, 0, 2 * Math.PI);
+        this.ctx.stroke();
+      }
+
+      // 初始化棋子
+      drawPieces() {
+        for (let item of piecePosition.white) {
+          this.ctx.beginPath();
+          this.ctx.arc(item.x, item.y, 30, 0, 2 * Math.PI);
+          this.ctx.fillStyle = 'white'
+          this.ctx.fill();
+          // 是否显示边框 => 用于被点击时
+          // if (this.clickedSeat.white === item.y) {
+          //   this.ctx.strokeStyle = 'red'
+          //   this.ctx.stroke();
+          // }
+        }
+
+        for (let item of piecePosition.black) {
+          this.ctx.beginPath();
+          this.ctx.arc(item.x, item.y, 30, 0, 2 * Math.PI);
+          this.ctx.fillStyle = 'black'
+          this.ctx.fill();
+          // 是否显示边框 => 用于被点击时
+          // if (this.clickedSeat.black === item.y) {
+          //   this.ctx.strokeStyle = 'red'
+          //   this.ctx.stroke();
+          // }
+        }
+
+      }
+
+      // 初始化数据并绑定点击事件
+      initData() {
+        // 可走的位置
+        this.freeSeat = [{ x: 300, y: 300 }, { x: 300, y: 500 }]
+        // 当前被点击棋子的位置
+        this.clickedSeat = {}
+        // 下一步要走的位置
+        this.nextSeat = {}
+
+        // 画棋子
+        this.drawPieces()
+
+        // 监听点击事件
+        this.canvas.addEventListener('click', e => {
+          // 被点击的位置
+          let x = Math.round(e.clientX / 100) * 100
+          let y = Math.round(e.clientY / 100) * 100
+
+          const position = [...piecePosition.white, ...piecePosition.black]
+
+          // 判断点击的是不是棋子
+          for (let item of position) {
+            if (JSON.stringify(item) === JSON.stringify({ x, y })) {
+              this.clickedSeat.x = x, this.clickedSeat.y = y
+            }
+          }
+
+          // 当点击过棋子并且下一步位置为空时, 记录下一步棋的位置
+          if (JSON.stringify(this.clickedSeat) !== '{}' && JSON.stringify(this.nextSeat) === '{}') {
+            for (let item of position) {
+              // 如果下一步的位置有棋子, 直接结束
+              if (JSON.stringify(item) === JSON.stringify({ x, y })) {
+                return;
+              }
+            }
+            // 下一步不是棋子的位置 且下一步的位置在可移动范围内
+            for (let item of this.freeSeat) {
+              if (JSON.stringify(item) === JSON.stringify({ x, y })) {
+                // 当下一步是进牢时, 直接进行数据更新
+                if (JSON.stringify({ x, y }) === JSON.stringify({ x: 300, y: 500 })) {
+                  this.updateData(true)
+                }
+                this.nextSeat.x = x, this.nextSeat.y = y
+                this.goStep()
+              }
+            }
+          }
+        })
+      }
+
+      // 移动棋子
+      goStep() {
+        // 替换piecePosition中的值为this.nextSeat
+        const white = piecePosition.white, black = piecePosition.black
+        for (let i in white) {
+          if (JSON.stringify(white[i]) === JSON.stringify(this.clickedSeat)) {
+            white[i] = this.nextSeat
+          }
+        }
+        for (let i in black) {
+          if (JSON.stringify(black[i]) === JSON.stringify(this.clickedSeat)) {
+            black[i] = this.nextSeat
+          }
+        }
+        const socket = new WebSocket('ws://192.168.137.1:4043');
+
+        // Connection opened
+        socket.addEventListener('open', function (event) {
+          socket.send(JSON.stringify(piecePosition));
+        });
+
+        this.resetCanvas()
+      }
+
+      // 判断赢家
+      judgeWinner() {
+        const winner = document.querySelector('.winner')
+        if (piecePosition.white.length == 0) {
+          winner.innerHTML = '赢家为 黑旗'
+        } else if (piecePosition.black.length == 0) {
+          winner.innerHTML = '赢家为 白旗'
+        }
+
+      }
+
+      // 重置画布
+      resetCanvas() {
+        // 清空原有画布并重新绘制
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height)
+        this.initial()
+        this.drawPieces()
+
+        // 更新数据
+        this.updateData(false)
+      }
+
+      // 更新数据
+      updateData(toCell) {
+        const position = [...piecePosition.white, ...piecePosition.black]
+
+        // 棋子进牢
+        if (toCell) {
+          // 当前点击的棋子位置加入可移动范围
+          this.freeSeat.push(this.clickedSeat)
+          // 且将该棋子删除
+          const white = piecePosition.white, black = piecePosition.black
+          for (let i in white) {
+            if (JSON.stringify(white[i]) === JSON.stringify(this.clickedSeat)) {
+              white.splice(i, 1)
+            }
+          }
+          for (let i in black) {
+            if (JSON.stringify(black[i]) === JSON.stringify(this.clickedSeat)) {
+              black.splice(i, 1)
+            }
+          }
+        } else {
+          // 当没有棋子进牢时, 原先被点击棋子的位置变为可移动范围
+          this.freeSeat[0] = this.clickedSeat
+        }
+
+        // 初始化clickedSeat和nextSeat
+        this.clickedSeat = {}
+        this.nextSeat = {}
+
+        // 每次更新数据后都判断一次有没有赢家
+        this.judgeWinner()
+      }
+    }
+
+
+    const cp = new CellPiece('tutorial');
+
+    const socket = new WebSocket('ws://192.168.137.1:4043');
+
+
+    // Listen for messages
+    socket.addEventListener('message', function (event) {
+      console.log('Message from server ', JSON.parse(event.data));
+      piecePosition = JSON.parse(event.data)
+      // console.log(piecePosition)
+      cp.resetCanvas()
+    });
+
+  </script>
+</body>
+
+</html>
