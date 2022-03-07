@@ -168,6 +168,9 @@ function judgeWinner() {
     winner.innerHTML = '赢家为 白旗'
   }
 
+  setTimeout(() => {
+    location.reload()
+  }, 2000)
 }
 
 // 重置画布
