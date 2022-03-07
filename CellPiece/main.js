@@ -14,8 +14,6 @@ let freeSeat = [{ x: 300, y: 300 }, { x: 300, y: 500 }]
 let clickedSeat = {}
 // 下一步要走的位置
 let nextSeat = {}
-// 牢房内棋子数量
-let cellPiece = 0;
 
 // websocket
 // const socket = new WebSocket('ws://192.168.137.1:4043');
@@ -187,7 +185,6 @@ function resetCanvas(toCell = false) {
 function updateData(toCell) {
   // 棋子进牢
   if (toCell) {
-    cellPiece += 1;
     // 当前点击的棋子位置加入可移动范围
     freeSeat.push(deepClone(clickedSeat))
 
