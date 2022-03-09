@@ -164,13 +164,18 @@ function judgeWinner() {
   const winner = document.querySelector('.winner')
   if (piecePosition.white.length == 0) {
     winner.innerHTML = '赢家为 黑旗'
+
+    setTimeout(() => {
+      location.reload()
+    }, 2000)
   } else if (piecePosition.black.length == 0) {
     winner.innerHTML = '赢家为 白旗'
+
+    setTimeout(() => {
+      location.reload()
+    }, 2000)
   }
 
-  setTimeout(() => {
-    location.reload()
-  }, 2000)
 }
 
 // 重置画布
