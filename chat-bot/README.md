@@ -1,19 +1,5 @@
-# chat-bot
+![111](https://user-images.githubusercontent.com/48284901/161382857-82e52f78-45b2-4514-ba3b-a64dbf9906ad.gif)
 
-## Project setup
-```
-npm install
-```
 
-### Compiles and hot-reloads for development
-```
-npm run serve
-```
+![image](https://user-images.githubusercontent.com/48284901/161382851-4071825d-5bb5-46e5-b691-3866f41e9955.png)
 
-### Compiles and minifies for production
-```
-npm run build
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
